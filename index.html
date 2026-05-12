@@ -29,12 +29,73 @@
     button:hover { opacity: 0.8; }
 
     .alert { color:#f87171; font-weight:bold; text-align:center; margin-top:10px; font-size: 1.2em; min-height: 1.5em; }
+  .login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-box {
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  text-align: center;
+}
+
+.login-box h2 {
+  margin-bottom: 10px;
+}
+
+.login-box p {
+  color: #cbd5e1;
+  margin-bottom: 20px;
+}
+
+.login-box input {
+  width: 100%;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.login-box button {
+  width: 100%;
+  margin-top: 5px;
+}
+
+.erro-login {
+  color: #f87171;
+  font-weight: bold;
+  margin-top: 15px;
+  min-height: 20px;
+}
+  
   </style>
 </head>
+
 <body>
 
-<h1>Monitor de Energia IoT</h1>
+<div id="loginContainer" class="login-container">
+  <div class="login-box">
+    <h2>Acesso ao Monitor</h2>
+    <p>Digite usuário e senha para acessar o dashboard.</p>
 
+    <input type="text" id="usuario" placeholder="Usuário">
+    <input type="password" id="senha" placeholder="Senha">
+
+    <button class="btn-filtrar" onclick="fazerLogin()">Entrar</button>
+
+    <div id="erroLogin" class="erro-login"></div>
+  </div>
+</div>
+
+<div id="dashboardContainer" style="display:none;">
+
+<h1>Monitor de Energia IoT</h1>
+  
 <div class="filtros">
   <input type="date" id="inicio">
   <input type="date" id="fim">
@@ -79,6 +140,23 @@
 let chart;
 let dadosAtuais = []; // Guarda os dados para exportar depois
 
+  function fazerLogin() {
+  const usuario = document.getElementById('usuario').value;
+  const senha = document.getElementById('senha').value;
+
+  if (usuario === 'admin' && senha === '12345') {
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('dashboardContainer').style.display = 'block';
+    document.getElementById('erroLogin').innerText = '';
+
+    carregarDados();
+  } else {
+    document.getElementById('erroLogin').innerText = 'Usuário ou senha inválidos.';
+  }
+}
+
+async function carregarDados() {
+  
 async function carregarDados() {
   const inicio = document.getElementById('inicio').value;
   const fim = document.getElementById('fim').value;
@@ -187,8 +265,16 @@ function baixarCSV() {
     a.click();
 }
 
-carregarDados();
-setInterval(carregarDados, 5000);
+setInterval(() => {
+  const dashboardVisivel = document.getElementById('dashboardContainer').style.display === 'block';
+
+  if (dashboardVisivel) {
+    carregarDados();
+  }
+}, 5000);
+  
 </script>
+
+</div>
 </body>
 </html>
