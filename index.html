@@ -2,304 +2,393 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Monitor de Energia Profissional</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meu Consumo</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root { color-scheme: dark; }
     body { font-family: Arial, sans-serif; background:#0b1120; color:white; margin:0; padding:20px; }
-    h1 { text-align:center; margin-bottom:20px; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:20px; }
-    
-    /* Cartões padrão */
-    .card { background:#1e293b; padding:20px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.3); text-align:center; transition: 0.5s; }
-    .card h2 { margin:10px 0; font-size:2.2em; font-weight: bold; }
-    .card p { margin: 0; color: #cbd5e1; font-size: 1em; text-transform: uppercase; letter-spacing: 1px; }
-    
-    /* Cores do Semáforo */
-    .status-bom { background: #14532d !important; }     /* Verde escuro */
-    .status-alerta { background: #713f12 !important; }  /* Amarelo/Laranja */
-    .status-critico { background: #7f1d1d !important; } /* Vermelho escuro */
-
-    .chart-container { background:#1e293b; padding:20px; border-radius:10px; margin-bottom: 20px;}
-    .filtros { display:flex; gap:10px; justify-content:center; margin-bottom:30px; flex-wrap:wrap; align-items: center; }
-    input { padding:10px; border-radius:8px; border:none; background: #334155; color: white; color-scheme: dark; }
-    
-    button { padding:10px 20px; border-radius:8px; border:none; color:white; font-weight: bold; cursor:pointer; transition: 0.2s; }
-    .btn-filtrar { background:#16a34a; }
-    .btn-exportar { background:#3b82f6; } /* Azul para exportar */
-    button:hover { opacity: 0.8; }
-
-    .alert { color:#f87171; font-weight:bold; text-align:center; margin-top:10px; font-size: 1.2em; min-height: 1.5em; }
-  .login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    h1 { text-align:center; margin:8px 0 24px; }
+    h2 { margin-top:0; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:20px; }
+    .card,.panel,.chart-container { background:#1e293b; padding:20px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,.25); }
+    .card { text-align:center; transition:.3s; }
+    .card h2 { margin:10px 0 0; font-size:2em; }
+    .card p,.muted { color:#cbd5e1; }
+    .status-bom { background:#14532d !important; }
+    .status-alerta { background:#713f12 !important; }
+    .status-critico { background:#7f1d1d !important; }
+    .toolbar,.form-row { display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+    input,select { padding:10px; border-radius:8px; border:1px solid #475569; background:#334155; color:white; }
+    button { padding:10px 16px; border:0; border-radius:8px; color:white; font-weight:bold; cursor:pointer; }
+    button:hover { opacity:.85; }
+    .primary { background:#16a34a; } .blue { background:#2563eb; } .secondary { background:#475569; } .danger { background:#b91c1c; }
+    .panel { margin-bottom:20px; }
+    .sensor-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+    .sensor-item { display:flex; gap:8px; align-items:center; justify-content:space-between; background:#0f172a; padding:10px; border-radius:8px; }
+    .sensor-item span { overflow-wrap:anywhere; }
+    .sensor-actions { display:flex; gap:6px; }
+    .sensor-actions button { padding:7px 9px; font-size:12px; }
+    .chart-container { margin-bottom:20px; min-height:280px; }
+    .alert { color:#f87171; font-weight:bold; text-align:center; min-height:24px; }
+    .login-container { min-height:90vh; display:flex; align-items:center; justify-content:center; }
+    .login-box { background:#1e293b; padding:30px; border-radius:12px; width:100%; max-width:380px; box-shadow:0 4px 20px rgba(0,0,0,.4); text-align:center; }
+    .login-box input { width:100%; margin-bottom:12px; box-sizing:border-box; }
+    .login-box button { width:100%; }
+    .erro-login { color:#f87171; margin-top:15px; min-height:20px; }
+    .login-icon { width:80px; height:80px; margin:0 auto 18px; border-radius:50%; background:linear-gradient(135deg,#1d4ed8,#0f172a); display:flex; align-items:center; justify-content:center; font-size:42px; color:#facc15; }
+    /* Logo oficial Meu Consumo */
+.brand-logo {
+    display: block;
+    width: min(280px, 80vw);
+    max-height: 150px;
+    height: auto;
+    object-fit: contain;
+    margin: 8px auto 24px;
+    padding: 8px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border-radius: 12px;
 }
 
-.login-box {
-  background: #1e293b;
-  padding: 30px;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 380px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  text-align: center;
+/* Logo da tela de login */
+.login-logo {
+    width: min(270px, 100%);
+    max-height: none;
+    margin: 0 auto 20px;
 }
-
-.login-box h2 {
-  margin-bottom: 10px;
-}
-
-.login-box p {
-  color: #cbd5e1;
-  margin-bottom: 20px;
-}
-
-.login-box input {
-  width: 100%;
-  margin-bottom: 12px;
-  box-sizing: border-box;
-}
-
-.login-box button {
-  width: 100%;
-  margin-top: 5px;
-}
-
-.erro-login {
-  color: #f87171;
-  font-weight: bold;
-  margin-top: 15px;
-  min-height: 20px;
-}
-
-  .login-icon {
-  width: 90px;
-  height: 90px;
-  margin: 0 auto 18px auto;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1d4ed8, #0f172a);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
-  border: 2px solid rgba(255,255,255,0.08);
-}
-
-.login-icon svg {
-  width: 42px;
-  height: 42px;
-  fill: #facc15;
-  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.45));
-}
-  
+    .checks { display:flex; flex-wrap:wrap; gap:12px; margin:12px 0 18px; }
+    .checks label { background:#0f172a; padding:8px 10px; border-radius:8px; }
+    .checks input { margin-right:6px; }
+    .note { font-size:.9em; color:#cbd5e1; line-height:1.5; }
+    @media(max-width:600px) { body { padding:12px; } .card,.panel,.chart-container { padding:14px; } }
   </style>
 </head>
-
 <body>
-
 <div id="loginContainer" class="login-container">
   <div class="login-box">
-
-    <div class="login-icon">
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M36 4L14 36h14l-4 24 26-34H36z"></path>
-      </svg>
-    </div>
-
-    <h2>Login</h2>
-    <p>Digite usuário e senha.</p>
-
-    <input type="text" id="usuario" placeholder="Usuário">
-    <input type="password" id="senha" placeholder="Senha">
-
-    <button type="button" class="btn-filtrar" onclick="fazerLogin()">Entrar</button>
-
+    <img
+    class="brand-logo login-logo"
+    src="logo-meu-consumo.jpg"
+    alt="Logo Meu Consumo"
+>
+    <h2>Login</h2><p class="muted">Digite usuário e senha.</p>
+    <input type="text" id="usuario" placeholder="Usuário" autocomplete="username">
+    <input type="password" id="senha" placeholder="Senha" autocomplete="current-password">
+    <button class="primary" onclick="fazerLogin()">Entrar</button>
     <div id="erroLogin" class="erro-login"></div>
   </div>
 </div>
 
-<div id="dashboardContainer" style="display:none;">
+<main id="dashboardContainer" style="display:none">
+  <img
+    class="brand-logo"
+    src="logo-meu-consumo.jpg"
+    alt="Logo Meu Consumo"
+>
 
-<h1>Monitor de Energia IoT</h1>
-  
-<div class="filtros">
-  <input type="date" id="inicio">
-  <input type="date" id="fim">
-  <button class="btn-filtrar" onclick="carregarDados()">Filtrar Dados</button>
-  <button class="btn-exportar" onclick="baixarCSV()">Baixar Relatório (CSV)</button>
-</div>
+  <section class="panel">
+    <h2>Gerenciar sensores</h2>
+    <form class="form-row" id="sensorForm">
+      <input id="novoSensorNome" maxlength="60" placeholder="Nome do novo sensor" required>
+      <button class="primary" type="submit">Adicionar sensor</button>
+    </form>
+    <div id="sensorList" class="sensor-list"></div>
+    <p class="note">Você pode cadastrar quantos sensores precisar. Eles podem ser renomeados a hora que quiser.</p>
+  </section>
 
-<div class="grid">
-  <div id="card-pot" class="card">
-    <p>Potência Atual</p>
-    <h2 id="potencia">--</h2>
-  </div>
+  <section class="toolbar">
+    <label for="sensorAtual">Sensor do painel:</label>
+    <select id="sensorAtual" onchange="carregarDados()"></select>
+    <label for="inicio">De:</label><input type="date" id="inicio">
+    <label for="fim">Até:</label><input type="date" id="fim">
+    <button class="primary" onclick="carregarDados()">Filtrar</button>
+    <button class="blue" onclick="baixarCSV()">Baixar CSV</button>
+  </section>
 
-  <div class="card">
-    <p>Tensão</p>
-    <h2 id="tensao">--</h2>
-  </div>
+  <section class="grid">
+    <div id="card-pot" class="card"><p>Potência atual</p><h2 id="potencia">--</h2></div>
+    <div class="card"><p>Tensão</p><h2 id="tensao">--</h2></div>
+    <div class="card"><p>Corrente</p><h2 id="corrente">--</h2></div>
+    <div class="card"><p>Consumo no período</p><h2 id="energia">--</h2></div>
+    <div class="card"><p>Custo estimado por hora</p><h2 id="custo" style="color:#4ade80">--</h2></div>
+  </section>
 
-  <div class="card">
-    <p>Corrente</p>
-    <h2 id="corrente">--</h2>
-  </div>
+  <div class="chart-container"><h2>Leituras do sensor selecionado</h2><canvas id="grafico"></canvas></div>
+  <div id="alerta" class="alert"></div>
 
-  <div class="card">
-    <p>Consumo Acumulado</p>
-    <h2 id="energia">--</h2>
-  </div>
-
-  <div class="card">
-    <p>Custo Est. (Hora)</p>
-    <h2 id="custo" style="color: #4ade80;">--</h2>
-  </div>
-</div>
-
-<div class="chart-container">
-  <canvas id="grafico"></canvas>
-</div>
-
-<div class="alert" id="alerta"></div>
+  <section class="panel">
+    <h2>Comparar consumo entre sensores</h2>
+    <div class="toolbar">
+      <label for="compInicio">De:</label><input type="date" id="compInicio">
+      <label for="compFim">Até:</label><input type="date" id="compFim">
+      <label for="periodo">Agrupar por:</label>
+      <select id="periodo"><option value="day">Dia</option><option value="week">Semana</option><option value="month" selected>Mês</option></select>
+      <button class="primary" onclick="compararConsumo()">Comparar</button>
+    </div>
+    <div id="sensorChecks" class="checks"></div>
+    <p class="note">A comparação soma a energia consumida em cada intervalo (kWh).</p>
+    <div class="chart-container"><canvas id="graficoComparacao"></canvas></div>
+    <div id="resumoComparacao" class="note"></div>
+  </section>
+</main>
 
 <script>
-let chart;
-let dadosAtuais = []; // Guarda os dados para exportar depois
+const API = '';
+let chart = null;
+let comparisonChart = null;
+let dadosAtuais = [];
+let sensores = [];
+const precoKwh = 0.70; // Ajuste para a tarifa da sua região/concessionária.
 
 function fazerLogin() {
   const usuario = document.getElementById('usuario').value.trim();
   const senha = document.getElementById('senha').value.trim();
-
   if (usuario === 'admin' && senha === '12345') {
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('dashboardContainer').style.display = 'block';
     document.getElementById('erroLogin').innerText = '';
+    inicializarPainel();
+  } else document.getElementById('erroLogin').innerText = 'Usuário ou senha inválidos.';
+}
 
-    carregarDados();
-  } else {
-    document.getElementById('erroLogin').innerText = 'Usuário ou senha inválidos.';
-  }
+document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+document.getElementById('sensorForm').addEventListener('submit', adicionarSensor);
+
+async function api(url, options = {}) {
+  const response = await fetch(API + url, { headers: { 'Content-Type': 'application/json' }, ...options });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Erro HTTP ${response.status}`);
+  return data;
+}
+
+async function inicializarPainel() {
+  try {
+    await carregarSensores();
+    await carregarDados();
+    definirDatasComparacao();
+    await compararConsumo();
+  } catch (err) { alert(err.message); }
+}
+
+async function carregarSensores() {
+  sensores = await api('/sensores');
+  const select = document.getElementById('sensorAtual');
+  const selected = select.value;
+  select.innerHTML = '';
+  sensores.forEach(sensor => {
+    const option = document.createElement('option');
+    option.value = sensor.id; option.textContent = sensor.name;
+    select.appendChild(option);
+  });
+  if (sensores.some(s => String(s.id) === selected)) select.value = selected;
+  renderizarSensores();
+  renderizarChecks();
+}
+
+function renderizarSensores() {
+  const list = document.getElementById('sensorList');
+  list.innerHTML = '';
+  sensores.forEach(sensor => {
+    const item = document.createElement('div'); item.className = 'sensor-item';
+    const name = document.createElement('span'); name.textContent = sensor.name;
+    const actions = document.createElement('div'); actions.className = 'sensor-actions';
+    const rename = document.createElement('button'); rename.className = 'secondary'; rename.textContent = 'Renomear';
+    rename.onclick = () => renomearSensor(sensor);
+    actions.append(rename); item.append(name, actions); list.append(item);
+  });
+}
+
+function renderizarChecks() {
+  const box = document.getElementById('sensorChecks'); box.innerHTML = '';
+  sensores.forEach(sensor => {
+    const label = document.createElement('label');
+    const input = document.createElement('input'); input.type = 'checkbox'; input.value = sensor.id; input.checked = true;
+    label.append(input, document.createTextNode(sensor.name)); box.append(label);
+  });
+}
+
+async function adicionarSensor(event) {
+  event.preventDefault();
+  const input = document.getElementById('novoSensorNome');
+  try {
+    await api('/sensores', { method: 'POST', body: JSON.stringify({ name: input.value.trim() }) });
+    input.value = ''; await carregarSensores();
+    document.getElementById('sensorAtual').value = String(sensores[sensores.length - 1].id);
+    await carregarDados(); await compararConsumo();
+  } catch (err) { alert(err.message); }
+}
+
+async function renomearSensor(sensor) {
+  const name = prompt('Novo nome para o sensor:', sensor.name);
+  if (name === null || !name.trim()) return;
+  try { await api(`/sensores/${sensor.id}`, { method: 'PATCH', body: JSON.stringify({ name: name.trim() }) }); await carregarSensores(); await carregarDados(); await compararConsumo(); }
+  catch (err) { alert(err.message); }
 }
 
 async function carregarDados() {
+  const sensorId = document.getElementById('sensorAtual').value;
+  if (!sensorId) return;
   const inicio = document.getElementById('inicio').value;
   const fim = document.getElementById('fim').value;
-
-  let url = 'http://localhost:3000/energia';
-  if (inicio && fim) url += `?inicio=${inicio}&fim=${fim}`;
-
+  const params = new URLSearchParams({ sensorId, limit: '5000' });
+  if (inicio) params.set('inicio', inicio); if (fim) params.set('fim', fim);
   try {
-    const res = await fetch(url);
-    dadosAtuais = await res.json();
-    if (dadosAtuais.length === 0) return;
+    dadosAtuais = await api(`/energia?${params}`);
+    const latest = await api(`/energia?sensorId=${sensorId}&limit=1`);
+    atualizarCartoes(latest[0] || null);
+    desenharGraficoLeituras(dadosAtuais.slice().reverse());
+  } catch (err) { console.error(err); document.getElementById('alerta').textContent = err.message; }
+}
 
-    const labels = dadosAtuais.map(d => new Date(d.created_at).toLocaleTimeString()).reverse();
-    const power = dadosAtuais.map(d => d.power).reverse();
-    const voltage = dadosAtuais.map(d => d.voltage).reverse();
-    const current = dadosAtuais.map(d => d.current).reverse();
-    const energy = dadosAtuais.map(d => d.energy).reverse();
+function atualizarCartoes(ultimo) {
+  const ids = ['potencia','tensao','corrente','energia','custo'];
+  if (!ultimo) { ids.forEach(id => document.getElementById(id).textContent = '--'); document.getElementById('alerta').textContent = 'Ainda não há leituras para este sensor.'; return; }
+  document.getElementById('potencia').textContent = `${Number(ultimo.power).toFixed(1)} W`;
+  document.getElementById('tensao').textContent = `${Number(ultimo.voltage).toFixed(1)} V`;
+  document.getElementById('corrente').textContent = `${Number(ultimo.current).toFixed(2)} A`;
+  const total = dadosAtuais.reduce((sum, row) => sum + (Number(row.energy_kwh_interval) || 0), 0);
+  document.getElementById('energia').textContent = `${total.toFixed(4)} kWh`;
+  const hourlyCost = (Number(ultimo.power) / 1000) * precoKwh;
+  document.getElementById('custo').textContent = hourlyCost.toLocaleString('pt-BR', { style:'currency', currency:'BRL' }) + '/h';
+  const card = document.getElementById('card-pot'); card.classList.remove('status-bom','status-alerta','status-critico');
+  if (Number(ultimo.power) > 3000) { card.classList.add('status-critico'); document.getElementById('alerta').textContent = '⚠️ ALERTA: CONSUMO CRÍTICO!'; }
+  else if (Number(ultimo.power) > 1000) { card.classList.add('status-alerta'); document.getElementById('alerta').textContent = 'Atenção: consumo elevado.'; }
+  else { card.classList.add('status-bom'); document.getElementById('alerta').textContent = ''; }
+}
 
-    const ultimo = {
-      power: power[power.length - 1],
-      voltage: voltage[voltage.length - 1],
-      current: current[current.length - 1],
-      energy: energy[energy.length - 1]
-    };
-    
-    // Atualiza textos
-    document.getElementById('potencia').innerText = ultimo.power + ' W';
-    document.getElementById('tensao').innerText = ultimo.voltage + ' V';
-    document.getElementById('corrente').innerText = ultimo.current + ' A';
-    document.getElementById('energia').innerText =
-    ultimo.energy !== null && ultimo.energy !== undefined
-      ? ultimo.energy + ' kWh'
-        : '--';
+function desenharGraficoLeituras(rows) {
+  // Preserve visibility of each graph series before refreshing.
+  const previousVisibility = {};
 
-    // Cálculo de Custo (Watts / 1000 * Preço kWh)
-    const precoKwh = 0.70;
-    const custoHora = (ultimo.power / 1000) * precoKwh;
-    document.getElementById('custo').innerText = 'R$ ' + custoHora.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  if (chart) {
+    chart.data.datasets.forEach((dataset, index) => {
+      previousVisibility[dataset.label] =
+        chart.isDatasetVisible(index);
+    });
 
-    // Lógica do Semáforo (Cores)
-    const cardPot = document.getElementById('card-pot');
-    cardPot.classList.remove('status-bom', 'status-alerta', 'status-critico');
-    
-    if (ultimo.power > 3000) {
-        cardPot.classList.add('status-critico');
-        document.getElementById('alerta').innerText = '⚠️ ALERTA: CONSUMO CRÍTICO!';
-    } else if (ultimo.power > 1000) {
-        cardPot.classList.add('status-alerta');
-        document.getElementById('alerta').innerText = 'Atenção: Consumo elevado.';
-    } else {
-        cardPot.classList.add('status-bom');
-        document.getElementById('alerta').innerText = '';
-    }
+    chart.destroy();
+  }
 
-    if (chart) chart.destroy();
-
-    chart = new Chart(document.getElementById('grafico'), {
-      type:'line',
-      data:{
-        labels: labels,
-        datasets:[
-          { label:'Potência (W)', data:power, borderColor: '#38bdf8', borderWidth:3, yAxisID:'y', tension: 0.3 },
-          { label:'Tensão (V)', data:voltage, borderColor: '#fb7185', borderWidth:2, yAxisID:'y1', tension: 0.3 },
-          { label:'Corrente (A)', data:current, borderColor: '#fbbf24', borderWidth:2, yAxisID:'y2', tension: 0.3 }
-        ]
+  chart = new Chart(document.getElementById('grafico'), {
+    type: 'line',
+    data: {
+      labels: rows.map(r =>
+        new Date(r.created_at.replace(' ','T') + 'Z').toLocaleString('pt-BR')
+      ),
+      datasets: [
+        {
+          label: 'Potência (W)',
+          data: rows.map(r => r.power),
+          borderColor: '#38bdf8',
+          yAxisID: 'y',
+          tension: .25,
+          hidden: previousVisibility['Potência (W)'] === false
+        },
+        {
+          label: 'Tensão (V)',
+          data: rows.map(r => r.voltage),
+          borderColor: '#fb7185',
+          yAxisID: 'y1',
+          tension: .25,
+          hidden: previousVisibility['Tensão (V)'] === false
+        },
+        {
+          label: 'Corrente (A)',
+          data: rows.map(r => r.current),
+          borderColor: '#fbbf24',
+          yAxisID: 'y2',
+          tension: .25,
+          hidden: previousVisibility['Corrente (A)'] === false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: 'white' } }
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: 'white' } } },
-        scales: {
-          x: { ticks: { color: '#94a3b8' } },
-          y: { // Potência (Azul)
-            type: 'linear', position: 'left',
-            title: { display: true, text: 'Watts', color: '#38bdf8' },
-            ticks: { color: '#38bdf8' }
-          },
-          y1: { // Tensão (Rosa)
-            type: 'linear', position: 'right',
-            title: { display: true, text: 'Volts', color: '#fb7185' },
-            ticks: { color: '#fb7185' },
-            grid: { drawOnChartArea: false }
-          },
-          y2: { // Corrente (Amarelo)
-            type: 'linear', position: 'right', offset: true,
-            title: { display: true, text: 'Amperes', color: '#fbbf24' },
-            ticks: { color: '#fbbf24' },
-            grid: { drawOnChartArea: false }
-          }
+      scales: {
+        x: {
+          ticks: { color: '#94a3b8', maxTicksLimit: 12 }
+        },
+        y: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'Watts', color: '#38bdf8' },
+          ticks: { color: '#38bdf8' }
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: 'Volts', color: '#fb7185' },
+          ticks: { color: '#fb7185' },
+          grid: { drawOnChartArea: false }
+        },
+        y2: {
+          type: 'linear',
+          position: 'right',
+          offset: true,
+          title: { display: true, text: 'Amperes', color: '#fbbf24' },
+          ticks: { color: '#fbbf24' },
+          grid: { drawOnChartArea: false }
         }
       }
-    });
-  } catch (error) { console.error("Erro:", error); }
+    }
+  });
+}
+
+function definirDatasComparacao() {
+  const now = new Date(); const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById('compInicio').value = dataLocal(start);
+  document.getElementById('compFim').value = dataLocal(now);
+}
+function dataLocal(date) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+
+async function compararConsumo() {
+  const inicio = document.getElementById('compInicio').value;
+  const fim = document.getElementById('compFim').value;
+  const periodo = document.getElementById('periodo').value;
+  const selectedIds = [...document.querySelectorAll('#sensorChecks input:checked')].map(el => el.value);
+  if (!inicio || !fim || inicio > fim) return alert('Selecione um intervalo de datas válido.');
+  if (!selectedIds.length) return alert('Selecione pelo menos um sensor.');
+  try {
+    const params = new URLSearchParams({ inicio, fim, periodo, sensorIds:selectedIds.join(',') });
+    const rows = await api(`/comparacao?${params}`);
+    desenharComparacao(rows, selectedIds);
+  } catch (err) { alert(err.message); }
+}
+
+function desenharComparacao(rows, selectedIds) {
+  const periods = [...new Set(rows.map(r => r.periodo))].sort();
+  const names = selectedIds.map(id => sensores.find(s => String(s.id) === String(id))).filter(Boolean);
+  const palette = ['#38bdf8','#fb7185','#fbbf24','#a78bfa','#4ade80','#f97316','#2dd4bf','#e879f9'];
+  const datasets = names.map((sensor, i) => ({
+    label:sensor.name,
+    data:periods.map(period => Number(rows.find(r => r.periodo === period && Number(r.sensor_id) === Number(sensor.id))?.consumption_kwh || 0)),
+    borderColor:palette[i % palette.length], backgroundColor:palette[i % palette.length], borderWidth:2, tension:.25
+  }));
+  if (comparisonChart) comparisonChart.destroy();
+  comparisonChart = new Chart(document.getElementById('graficoComparacao'), { type:'bar', data:{labels:periods,datasets}, options:{responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{labels:{color:'white'}}}, scales:{x:{ticks:{color:'#cbd5e1'}},y:{beginAtZero:true,title:{display:true,text:'Consumo (kWh)',color:'#cbd5e1'},ticks:{color:'#cbd5e1'}}}} });
+  const totals = names.map(sensor => {
+    const total = rows.filter(r => Number(r.sensor_id) === Number(sensor.id)).reduce((sum,r) => sum + Number(r.consumption_kwh || 0),0);
+    return `${sensor.name}: ${total.toFixed(4)} kWh`;
+  });
+  document.getElementById('resumoComparacao').textContent = rows.length ? `Total no intervalo — ${totals.join(' | ')}` : 'Não há consumo calculado neste intervalo. Confira se o ESP32 está enviando energyKwh ou se existem leituras de potência próximas no tempo.';
 }
 
 function baixarCSV() {
-    if (dadosAtuais.length === 0) return alert("Sem dados para exportar!");
-    let csv = "Data/Hora,Voltagem,Corrente,Potencia\n";
-    dadosAtuais.forEach(row => {
-        csv += `${row.created_at},${row.voltage},${row.current},${row.power}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'relatorio_energia.csv';
-    a.click();
+  if (!dadosAtuais.length) return alert('Sem dados para exportar!');
+  const header = ['Data/Hora','Sensor','Tensao_V','Corrente_A','Potencia_W','Consumo_intervalo_kWh'];
+  const lines = dadosAtuais.map(row => [row.created_at,row.sensor_name,row.voltage,row.current,row.power,row.energy_kwh_interval].map(value => `"${String(value ?? '').replaceAll('"','""')}"`).join(','));
+  const blob = new Blob(['\ufeff' + [header.join(','),...lines].join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='relatorio_energia.csv'; a.click(); URL.revokeObjectURL(url);
 }
 
 setInterval(() => {
-  const dashboardVisivel = document.getElementById('dashboardContainer').style.display === 'block';
-
-  if (dashboardVisivel) {
-    carregarDados();
-  }
+  if (document.getElementById('dashboardContainer').style.display === 'block') carregarDados();
 }, 5000);
-  
 </script>
-
-</div>
 </body>
 </html>
